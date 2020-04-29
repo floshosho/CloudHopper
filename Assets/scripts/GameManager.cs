@@ -1,4 +1,4 @@
-﻿ using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
         CountDownText.OnCountDownFinished += OnCountDownFinished;
         TapController.OnPlayerDied += OnPlayerDied;
         TapController.OnPlayerScored += OnPlayerScored;
+        scoreText.text = "";
     }
 
     void OnDisable() {
@@ -56,23 +57,35 @@ public class GameManager : MonoBehaviour
         setPageState(PageState.None);
         OnGameStarted();    // Call OnGameStarted event that is defined in GameManager class
         duringGameScore = 0;
+        PlayerPrefs.SetInt("RunningScore", 0);
         gameOver = false;
+        scoreText.text = "0";
+
     }
 
     void OnPlayerDied() {
         gameOver = true;
-        int currentHighScore = PlayerPrefs.GetInt("HighScore");   //  Get current high score
+        int currentHighScore = PlayerPrefs.GetInt("HighScore");  //  Get current high score
+        int totalDeaths = PlayerPrefs.GetInt("TotalDeaths");
+        totalDeaths++;
+        PlayerPrefs.SetInt("TotalDeaths", totalDeaths);
         if (duringGameScore > currentHighScore) {
             PlayerPrefs.SetInt("HighScore", duringGameScore);
         }
+
         setPageState(PageState.GameOver);
 
     }
 
     void OnPlayerScored() {
         duringGameScore++;
+        int currentTotalScore = PlayerPrefs.GetInt("TotalScore");
+        currentTotalScore++;
+        PlayerPrefs.SetInt("TotalScore", currentTotalScore);
+        PlayerPrefs.SetInt("RunningScore", duringGameScore);
         scoreText.text = duringGameScore.ToString();
     }
+
 
     void setPageState(PageState state) {
         switch (state) {
@@ -127,11 +140,35 @@ public class GameManager : MonoBehaviour
         setPageState(PageState.CountDown);
     }
 
+
+    // Activated when the achievements button is clicked
+    public void OpenTrophies() {
+        setPageState(PageState.Trophies);
+    }
+
+    public void ResetStats()
+    {
+        PlayerPrefs.SetInt("HighScore", 0);
+        PlayerPrefs.SetInt("TotalScore", 0);
+        PlayerPrefs.SetInt("TotalDeaths", 0);
+    }
+
+    //Activated when the back button in the trophies menu is clicked
+    public void GoToStart() {
+        setPageState(PageState.Start);
+    }
+
     //  Activated when replay button is clicked
     public void ConfirmGameOver()
     {
         OnGameOverConfirmed();  //  event
         scoreText.text = "0";
+        setPageState(PageState.CountDown);
+    }
+
+    public void ConfirmMainMenu()
+    {
+        OnGameOverConfirmed();
         setPageState(PageState.Start);
     }
 }
